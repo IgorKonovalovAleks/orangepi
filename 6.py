@@ -19,15 +19,16 @@ sd.default.device = 3
 
 
 def speak(text: str):
-    audio = model.apply_tts(text=text + "..",
-                            speaker=speaker,
-                            sample_rate=sample_rate,
-                            )
+    with torch.no_grad():
+        audio = model.apply_tts(text=text + "..",
+                                speaker=speaker,
+                                sample_rate=sample_rate,
+                                )
 
-    sd.play(audio, sample_rate)
-    time.sleep((len(audio) / (sample_rate)) + 0.5)
-    sd.stop()
-    del audio  # освобождаем память
+        sd.play(audio, sample_rate)
+        time.sleep((len(audio) / (sample_rate)) + 0.5)
+        sd.stop()
+        del audio  # освобождаем память
 
 
 speak("Привет, друзья")
