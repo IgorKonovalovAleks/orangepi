@@ -1,17 +1,33 @@
-import torch
+
 import sounddevice as sd
 import time
+import torch
 import torchaudio
 
-speakers = ["aidar", "baya", "kseniya", "xenia", "eugene"]
-for speaker in speakers:
-    model = torch.package.PackageImporter(r".\v5_ru.pt").load_pickle("tts_models", "model")
-    print(sd.query_devices())
-    sd.default.device = 3
-    audio = model.apply_tts(text="Прив+ет, друзь+я!", speaker=speaker, sample_rate=24000)
-    sd.play(audio, 24000)
-    time.sleep((len(audio) / 24000) + 0.5)
-    sd.stop()
-    torchaudio.save(f"{speaker}.mp3", audio.unsqueeze(0), sample_rate=24000)
+print(sd.query_devices())
+speaker = "aidar"
+sample_rate = 24000
+device = torch.device('cpu')  # cpu или gpu
+torch.set_num_threads(4)  # количество задействованных потоков CPU
 
-    del audio
+model = torch.package.PackageImporter("v5_ru.pt").load_pickle("tts_models", "model")
+
+torch._C._jit_set_profiling_mode(False)
+torch.set_grad_enabled(False)
+model.to(device)
+sd.default.device = 3
+
+
+def speak(text: str):
+    audio = model.apply_tts(text=text + "..",
+                            speaker=speaker,
+                            sample_rate=sample_rate,
+                            )
+
+    sd.play(audio, sample_rate)
+    time.sleep((len(audio) / (sample_rate)) + 0.5)
+    sd.stop()
+    del audio  # освобождаем память
+
+
+speak("Привет, друзья")
